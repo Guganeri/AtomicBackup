@@ -2,28 +2,38 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
+	"time"
 
 	_ "github.com/lib/pq"
 )
 
 func main() {
-	// Configurações do banco de dados
-	dsn := "user=username dbname=database sslmode=disable"
+	currentTime := time.Now()
+	formattedTime := currentTime.Format("2006-01-02 15:04:05")
 
-	// Caminho para salvar o arquivo de dump
-	dumpFilePath := "/path/to/backups/dump.sql"
+	containerName := "postgres"
+	user := "pgApp"
+	password := "pgApp"
+	dbname := "postgres"
+	backupFilename := formattedTime + " " + dbname + "bkp" + ".sql"
 
-	// Comando para executar o pg_dump
-	cmd := exec.Command("pg_dump", dsn, "--file="+dumpFilePath)
+	// Comando de backup usando docker exec
+	cmd := exec.Command("docker", "exec", containerName, "pg_dump",
+		"--username="+user,
+		"--dbname="+dbname,
+		"--file=/var/lib/postgres/"+backupFilename)
 
-	// Executa o comando e verifica por erros
-	err := cmd.Run()
+	// Configurar a senha usando variáveis de ambiente
+	cmd.Env = append(os.Environ(), fmt.Sprintf("PGPASSWORD=%s", password))
+
+	// Executar o comando
+	output, err := cmd.CombinedOutput()
 	if err != nil {
-		fmt.Println("Erro ao executar o pg_dump:", err)
-		os.Exit(1)
+		log.Fatalf("Erro ao executar o comando: %s\n%s", err, output)
 	}
 
-	fmt.Println("Dump do banco de dados PostgreSQL concluído com sucesso!")
+	fmt.Println("Backup concluído e salvo dentro do container com sucesso!")
 }
