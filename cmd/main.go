@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"os"
@@ -46,6 +47,14 @@ func onPremFunc() {
 	dbname := "postgres"
 	backupFilename := formattedTime + " " + dbname + "bkp" + ".sql"
 
+	connectionString := "user=" + user + " password=" + password + " dbname=" + dbname + " sslmode=disable"
+
+	db, err := sql.Open("postgres", connectionString)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+
 	cmd := exec.Command()
 
 	fmt.Println("Backup concluído e salvo dentro do container com sucesso!")
@@ -53,5 +62,5 @@ func onPremFunc() {
 }
 
 func main() {
-	dockerFunc()
+	onPremFunc()
 }
