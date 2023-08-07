@@ -37,6 +37,21 @@ func dockerFunc() {
 	fmt.Println("Backup concluído e salvo dentro do container com sucesso!")
 }
 
+func onPremFunc() {
+	currentTime := time.Now()
+	formattedTime := currentTime.Format("2006-01-02 15:04:05")
+
+	user := "pgApp"
+	password := "pgApp"
+	dbname := "postgres"
+	backupFilename := formattedTime + " " + dbname + "bkp" + ".sql"
+
+	cmd := exec.Command()
+
+	fmt.Println("Backup concluído e salvo dentro do container com sucesso!")
+
+}
+
 func main() {
 	dockerFunc()
 }
