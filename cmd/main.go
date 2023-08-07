@@ -29,7 +29,6 @@ func dockerFunc() {
 	// Configurar a senha usando variáveis de ambiente
 	cmd.Env = append(os.Environ(), fmt.Sprintf("PGPASSWORD=%s", password))
 
-	// Executar o comando
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		log.Fatalf("Erro ao executar o comando: %s\n%s", err, output)
