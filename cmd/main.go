@@ -10,7 +10,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
-func main() {
+func dockerFunc() {
 	currentTime := time.Now()
 	formattedTime := currentTime.Format("2006-01-02 15:04:05")
 
@@ -36,4 +36,8 @@ func main() {
 	}
 
 	fmt.Println("Backup concluído e salvo dentro do container com sucesso!")
+}
+
+func main() {
+	dockerFunc()
 }
