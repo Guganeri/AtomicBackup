@@ -6,9 +6,11 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"strings"
 	"time"
 
 	_ "github.com/lib/pq"
+	"github.com/shirou/gopsutil/process"
 )
 
 func dockerFunc() {
@@ -61,6 +63,33 @@ func onPremFunc() {
 
 }
 
+func processRunning(processName string) bool {
+	processes, err := process.Processes()
+	if err != nil {
+		fmt.Println("Erro ao obter lista de processos:", err)
+		return false
+	}
+
+	for _, proc := range processes {
+		name, err := proc.Name()
+		if err != nil {
+			continue
+		}
+
+		if strings.Contains(name, processName) {
+			return true
+		}
+	}
+
+	return false
+}
+
 func main() {
-	onPremFunc()
+	processName := "seu_processo" // Substitua pelo nome do processo que deseja verificar
+
+	if processRunning(processName) {
+		fmt.Printf("O processo %s está em execução.\n", processName)
+	} else {
+		fmt.Printf("O processo %s não está em execução.\n", processName)
+	}
 }
