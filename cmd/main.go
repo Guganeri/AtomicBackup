@@ -85,7 +85,7 @@ func processRunning(processName string) bool {
 	return false
 }
 
-func dockerProcessRunning() bool {
+func dockerProcessRunning(processDocker string) bool {
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		fmt.Println("Erro ao criar cliente Docker:", err)
@@ -102,7 +102,7 @@ func dockerProcessRunning() bool {
 
 	for _, container := range containers {
 		for _, name := range container.Names {
-			if name == "/postgres" {
+			if name == processDocker {
 				return true
 			}
 		}
@@ -114,11 +114,12 @@ func dockerProcessRunning() bool {
 func main() {
 
 	nameProcess := "postgres"
+	fmt.Println("Iniciando...")
 
 	if processRunning(nameProcess) {
 		fmt.Println("Existe um PG na máquina, iniciando processo de DUMP")
 		onPremFunc()
-	} else if dockerProcessRunning() {
+	} else if dockerProcessRunning("/" + nameProcess) {
 		fmt.Println("Existe um PG utilizando Docker, iniciando processo e DUMP")
 		dockerFunc()
 	}
