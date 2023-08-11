@@ -114,6 +114,7 @@ func dockerProcessRunning(processDocker string) bool {
 func main() {
 
 	nameProcess := "postgres"
+
 	fmt.Println("Iniciando...")
 
 	if processRunning(nameProcess) {
