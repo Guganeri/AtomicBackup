@@ -1,7 +1,7 @@
 package main
 
 import (
-	"database/sql"
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/client"
 	_ "github.com/lib/pq"
 	"github.com/shirou/gopsutil/process"
 )
@@ -23,13 +25,11 @@ func dockerFunc() {
 	dbname := "postgres"
 	backupFilename := formattedTime + " " + dbname + "bkp" + ".sql"
 
-	// Comando de backup usando docker exec
 	cmd := exec.Command("docker", "exec", containerName, "pg_dump",
 		"--username="+user,
 		"--dbname="+dbname,
 		"--file=/var/lib/postgres/"+backupFilename)
 
-	// Configurar a senha usando variáveis de ambiente
 	cmd.Env = append(os.Environ(), fmt.Sprintf("PGPASSWORD=%s", password))
 
 	output, err := cmd.CombinedOutput()
@@ -41,25 +41,26 @@ func dockerFunc() {
 }
 
 func onPremFunc() {
-	currentTime := time.Now()
-	formattedTime := currentTime.Format("2006-01-02 15:04:05")
-
-	user := "pgApp"
-	password := "pgApp"
-	dbname := "postgres"
-	backupFilename := formattedTime + " " + dbname + "bkp" + ".sql"
-
-	connectionString := "user=" + user + " password=" + password + " dbname=" + dbname + " sslmode=disable"
-
-	db, err := sql.Open("postgres", connectionString)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer db.Close()
-
-	cmd := exec.Command()
-
-	fmt.Println("Backup concluído e salvo dentro do container com sucesso!")
+	fmt.Println("Dump OK")
+	//currentTime := time.Now()
+	//formattedTime := currentTime.Format("2006-01-02 15:04:05")
+	//
+	//user := "pgApp"
+	//password := "pgApp"
+	//dbname := "postgres"
+	//backupFilename := formattedTime + " " + dbname + "bkp" + ".sql"
+	//
+	//connectionString := "user=" + user + " password=" + password + " dbname=" + dbname + " sslmode=disable"
+	//
+	//db, err := sql.Open("postgres", connectionString)
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
+	//defer db.Close()
+	//
+	//cmd := exec.Command()
+	//
+	//fmt.Println("Backup concluído e salvo dentro do container com sucesso!")
 
 }
 
@@ -84,12 +85,42 @@ func processRunning(processName string) bool {
 	return false
 }
 
-func main() {
-	processName := "seu_processo" // Substitua pelo nome do processo que deseja verificar
-
-	if processRunning(processName) {
-		fmt.Printf("O processo %s está em execução.\n", processName)
-	} else {
-		fmt.Printf("O processo %s não está em execução.\n", processName)
+func dockerProcessRunning() bool {
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		fmt.Println("Erro ao criar cliente Docker:", err)
+		return false
 	}
+
+	containers, err := cli.ContainerList(context.Background(), types.ContainerListOptions{
+		All: true,
+	})
+	if err != nil {
+		fmt.Println("Erro ao listar contêineres:", err)
+		return false
+	}
+
+	for _, container := range containers {
+		for _, name := range container.Names {
+			if name == "/postgres" {
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
+func main() {
+
+	nameProcess := "postgres"
+
+	if processRunning(nameProcess) {
+		fmt.Println("Existe um PG na máquina, iniciando processo de DUMP")
+		onPremFunc()
+	} else if dockerProcessRunning() {
+		fmt.Println("Existe um PG utilizando Docker, iniciando processo e DUMP")
+		dockerFunc()
+	}
+
 }
