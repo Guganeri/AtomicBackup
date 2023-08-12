@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log"
 	"os"
@@ -40,28 +41,28 @@ func dockerFunc() {
 	fmt.Println("Backup concluído e salvo dentro do container com sucesso!")
 }
 
-func onPremFunc() {
-	fmt.Println("Dump OK")
-	//currentTime := time.Now()
-	//formattedTime := currentTime.Format("2006-01-02 15:04:05")
-	//
-	//user := "pgApp"
-	//password := "pgApp"
-	//dbname := "postgres"
-	//backupFilename := formattedTime + " " + dbname + "bkp" + ".sql"
-	//
-	//connectionString := "user=" + user + " password=" + password + " dbname=" + dbname + " sslmode=disable"
-	//
-	//db, err := sql.Open("postgres", connectionString)
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
-	//defer db.Close()
-	//
-	//cmd := exec.Command()
-	//
-	//fmt.Println("Backup concluído e salvo dentro do container com sucesso!")
+func onPremFunc(dbURL, outputPath string) error {
+	db, err := sql.Open("postgres", dbURL)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
 
+	currentTime := time.Now().Format("2006-01-02 15:04:05")
+	backupFilename := fmt.Sprintf("%s_backup.sql", currentTime)
+	backupPath := outputPath + backupFilename
+
+	dumpCmd := exec.Command("pg_dump", dbURL, "--file", backupPath)
+	dumpCmd.Stdout = os.Stdout
+	dumpCmd.Stderr = os.Stderr
+
+	err = dumpCmd.Run()
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("Backup criado em: %s\n", backupPath)
+	return nil
 }
 
 func processRunning(processName string) bool {
