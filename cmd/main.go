@@ -16,6 +16,7 @@ import (
 )
 
 func dockerProcessRunning(processDocker string) bool {
+
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		fmt.Println("Erro ao criar cliente Docker:", err)
